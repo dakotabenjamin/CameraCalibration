@@ -11,7 +11,9 @@ default values:
     <image mask> defaults to .sample/chessboard/*.jpg
 
 
-COPYRIGHT GOES TO OPENCV, this is not mine.
+Code forked from OpenCV:
+https://github.com/opencv/opencv/blob/a8e2922467bb5bb8809fc8ae6b7233893c6db917/samples/python/calibrate.py
+released under BSD 3 license
 '''
 
 # Python 2/3 compatibility
