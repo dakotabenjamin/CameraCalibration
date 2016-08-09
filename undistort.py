@@ -18,6 +18,7 @@ import os
 import logging
 import sys
 import getopt
+from subprocess import call
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
@@ -28,11 +29,12 @@ if __name__ == '__main__':
     args.setdefault('--matrix', os.path.abspath('./sample/output/matrix.txt'))
     args.setdefault('--distortion', os.path.abspath('./sample/output/distortion.txt'))
     if not img_path:
-        img_path = os.path.abspath('./sample/img/*.jpg')  # default
-    else:
-        img_path = img_path[0]
+    #    img_path = os.path.abspath('./sample/img/*.JPG')  # default
+        img_path = glob.glob(os.path.abspath('./sample/img/*.JPG'))  # default
+    #else:
+    #    img_path = img_path[0]
+    images_path = os.path.split(img_path[0])[0]
 
-    images_path = os.path.abspath(img_path.split("*")[0])
     matrix_path = args.get('--matrix')
     distortion_path = args.get('--distortion')
     out_path = os.path.join(images_path, 'out')
@@ -54,9 +56,9 @@ if __name__ == '__main__':
 
     logging.debug("Starting loop")
     logging.debug("writing images to {0})".format(out_path))
-    for image in glob.glob(img_path):
+    for image in img_path:
         # logging.debug("var %s", image)
-        imgname = image.split("\\")[-1]
+        imgname = os.path.split(image)[1] 
         logging.debug("Undistorting %s . . . ", imgname)
         # read one of your images
         img = cv2.imread(image)
@@ -68,8 +70,9 @@ if __name__ == '__main__':
 
         # TODO Write exif: camera maker, camera model, focal length?, GPS to new file
         # cv2.imwrite("original.jpg", img)
-        newimg_path = out_path + imgname
+        newimg_path = os.path.join(out_path, imgname)
         cv2.imwrite(newimg_path, newimg)
 
         # Only works on linux
-        command = "exiftool -TagsFromFile {0} -all:all {1}".format(image, newimg_path)
+        command = "exiftool -TagsFromFile {0} -all:all {1}".format(image, newimg_path).split(' ')
+        call(command)

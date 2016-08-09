@@ -36,13 +36,14 @@ if __name__ == '__main__':
     args, img_mask = getopt.getopt(sys.argv[1:], '', ['debug=', 'square_size='])
     args = dict(args)
     if not img_mask:
-        img_mask = './sample/chessboard/*.jpg'  # default
+        img_mask = os.path.abspath('./sample/chessboard/*')  # default
     else:
         img_mask = img_mask[0]
     proj_root = img_mask.split('*')[0]
     args.setdefault('--debug', proj_root)
     args.setdefault('--square_size', 1.0)
 
+    print(img_mask)
 
     img_names = glob(img_mask)
     debug_dir = args.get('--debug')
@@ -59,6 +60,7 @@ if __name__ == '__main__':
     img_points = []
     h, w = 0, 0
     img_names_undistort = []
+    print('img: ', img_names)
     for fn in img_names:
         print('processing %s... ' % fn, end='')
         img = cv2.imread(fn, 0)
