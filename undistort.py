@@ -32,9 +32,10 @@ if __name__ == '__main__':
     else:
         img_path = img_path[0]
 
+    images_path = os.path.abspath(img_path.split("*")[0])
     matrix_path = args.get('--matrix')
     distortion_path = args.get('--distortion')
-    out_path = '\\'.join(img_path.split('\\')[:-1]) + '\\out\\'
+    out_path = os.path.join(images_path, 'out')
 
     # load parameters to np arrays
     K = np.loadtxt(matrix_path)
