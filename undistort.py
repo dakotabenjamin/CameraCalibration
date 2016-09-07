@@ -30,10 +30,12 @@ if __name__ == '__main__':
     args.setdefault('--distortion', os.path.abspath('./sample/output/distortion.txt'))
     if not img_path:
     #    img_path = os.path.abspath('./sample/img/*.JPG')  # default
-        img_path = glob.glob(os.path.abspath('./sample/img/*.JPG'))  # default
+        img_path = os.path.abspath('./sample/img/*.JPG')  # default
     #else:
     #    img_path = img_path[0]
+    img_path = glob.glob(os.path.abspath(img_path[0]))
     images_path = os.path.split(img_path[0])[0]
+    logging.debug(images_path)
 
     matrix_path = args.get('--matrix')
     distortion_path = args.get('--distortion')
@@ -75,4 +77,7 @@ if __name__ == '__main__':
 
         # Only works on linux
         command = "exiftool -TagsFromFile {0} -all:all {1}".format(image, newimg_path).split(' ')
-        call(command)
+        try:
+            call(command)
+        except WindowsError as err:
+            logging.error("Failed to write to exif: {0}".format(err))

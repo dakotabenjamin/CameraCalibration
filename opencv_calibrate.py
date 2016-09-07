@@ -18,15 +18,17 @@ released under BSD 3 license
 
 # Python 2/3 compatibility
 from __future__ import print_function
-
 import numpy as np
 import cv2
+import logging
 
 # local modules
 from common import splitfn
 
 # built-in modules
 import os
+
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 if __name__ == '__main__':
     import sys
@@ -43,7 +45,7 @@ if __name__ == '__main__':
     args.setdefault('--debug', proj_root)
     args.setdefault('--square_size', 1.0)
 
-    print(img_mask)
+    logging.debug(img_mask)
 
     img_names = glob(img_mask)
     debug_dir = args.get('--debug')
@@ -78,7 +80,7 @@ if __name__ == '__main__':
             vis = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
             cv2.drawChessboardCorners(vis, pattern_size, corners, found)
             path, name, ext = splitfn(fn)
-            outfile = debug_dir + name + '_chess.png'
+            outfile = os.path.join(debug_dir, name + '_chess.png')
             cv2.imwrite(outfile, vis)
             if found:
                 img_names_undistort.append(outfile)
@@ -101,15 +103,14 @@ if __name__ == '__main__':
     print("distortion coefficients: ", dist_coefs.ravel())
 
     # write to matrix to be used as input
-    with open(debug_dir + "matrix.txt", "w") as matf:
+    with open(os.path.join(debug_dir, "matrix.txt"), "w") as matf:
         camera_matrix.reshape((3, 3))
         np.savetxt(matf, (camera_matrix[0], camera_matrix[1], camera_matrix[2]), fmt='%-12.8f')
 
-    with open(debug_dir + "distortion.txt", "w") as distf:
+    with open(os.path.join(debug_dir, "distortion.txt"), "w") as distf:
         np.savetxt(distf, dist_coefs.ravel(), fmt='%.12f')
 
     # undistort the image with the calibration
-    print('')
     for img_found in img_names_undistort:
         img = cv2.imread(img_found)
 
@@ -121,8 +122,8 @@ if __name__ == '__main__':
         # crop and save the image
         x, y, w, h = roi
         dst = dst[y:y+h, x:x+w]
-        outfile = img_found + '_undistorted.png'
-        print('Undistorted image written to: %s' % outfile)
+        outfile = os.path.join(img_found, '_undistorted.png')
         cv2.imwrite(outfile, dst)
+        print('Undistorted image written to: %s' % outfile)
 
     cv2.destroyAllWindows()
