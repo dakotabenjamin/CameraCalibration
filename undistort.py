@@ -79,5 +79,5 @@ if __name__ == '__main__':
         command = "exiftool -TagsFromFile {0} -all:all {1}".format(image, newimg_path).split(' ')
         try:
             call(command)
-        except WindowsError as err:
+        except Exception as err:
             logging.error("Failed to write to exif: {0}".format(err))
