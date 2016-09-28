@@ -16,7 +16,6 @@ RUN apt-get update && \
 
 COPY . /app
 
-USER nobody
 VOLUME /app/config
 VOLUME /app/images
 WORKDIR /app
