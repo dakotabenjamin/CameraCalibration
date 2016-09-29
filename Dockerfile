@@ -20,4 +20,4 @@ VOLUME /app/config
 VOLUME /app/images
 WORKDIR /app
 
-ENTRYPOINT ["python", "undistort.py", "--matrix", "/app/config/matrix.txt", "--distortion", "/app/config/distortion.txt", "/app/images/*"]
+ENTRYPOINT ["python", "undistort.py", "--matrix", "/app/config/matrix.txt", "--distortion", "/app/config/distortion.txt", "/app/images/"]
