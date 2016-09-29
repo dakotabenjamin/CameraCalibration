@@ -4,9 +4,9 @@
 camera calibration for distorted images with chess board samples
 reads distorted images, calculates the calibration and write undistorted images
 usage:
-    calibrate.py [--debug <output path>] [--square_size] [<image mask>]
+    calibrate.py [--out <output path>] [--square_size] [<image mask>]
 default values:
-    --debug:    .sample/output/
+    --out:    .sample/output/
     --square_size: 1.0
     <image mask> defaults to .sample/chessboard/*.jpg
 
@@ -18,42 +18,61 @@ released under BSD 3 license
 
 # Python 2/3 compatibility
 from __future__ import print_function
-import numpy as np
-import cv2
-import logging
 
 # local modules
 from common import splitfn
 
 # built-in modules
 import os
+import sys
+from glob import glob
+import numpy as np
+import cv2
+import logging
+import argparse
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 if __name__ == '__main__':
-    import sys
-    import getopt
-    from glob import glob
 
-    args, img_mask = getopt.getopt(sys.argv[1:], '', ['debug=', 'square_size='])
-    args = dict(args)
-    if not img_mask:
-        img_mask = os.path.abspath('./sample/chessboard/*')  # default
+    # Parse arguments
+    parser = argparse.ArgumentParser(description='Generate camera matrix and '
+                                     'distortion parameters from checkerboard '
+                                     'images')
+    parser.add_argument('images', help='path to images')
+    parser.add_argument('pattern_x', metavar='X', default=9, type=int, 
+                        help='pattern x')
+    parser.add_argument('pattern_y', metavar='Y', default=6, type=int, 
+                        help='pattern y')
+    parser.add_argument('--out', help='optional path for output')
+    parser.add_argument('--square_size', default=1.0)
+
+    args=parser.parse_args()
+
+    logging.debug(args)
+
+    # get images into a list
+    extensions = ['jpg', 'JPG', 'png']
+
+    if os.path.isdir(args.images):
+        img_names = [fn for fn in os.listdir(args.images)
+                     if any(fn.endswith(ext) for ext in extensions)]
+        proj_root = args.images
+    else: 
+        logging.error("%s is not a directory" % args.images)
+        exit()
+
+    if not args.out:
+        out = os.path.join(proj_root, 'out')
     else:
-        img_mask = img_mask[0]
-    proj_root = img_mask.split('*')[0]
-    args.setdefault('--debug', proj_root)
-    args.setdefault('--square_size', 1.0)
+        out = args.out
+        
+    if not os.path.isdir(out):
+        os.mkdir(out)
 
-    logging.debug(img_mask)
+    square_size = float(args.square_size)
 
-    img_names = glob(img_mask)
-    debug_dir = args.get('--debug')
-    if not os.path.isdir(debug_dir):
-        os.mkdir(debug_dir)
-    square_size = float(args.get('--square_size'))
-
-    pattern_size = (9, 6)
+    pattern_size = (args.pattern_x, args.pattern_y)
     pattern_points = np.zeros((np.prod(pattern_size), 3), np.float32)
     pattern_points[:, :2] = np.indices(pattern_size).T.reshape(-1, 2)
     pattern_points *= square_size
@@ -65,7 +84,7 @@ if __name__ == '__main__':
     print('img: ', img_names)
     for fn in img_names:
         print('processing %s... ' % fn, end='')
-        img = cv2.imread(fn, 0)
+        img = cv2.imread(os.path.join(proj_root, fn), 0)
         if img is None:
             print("Failed to load", fn)
             continue
@@ -76,11 +95,11 @@ if __name__ == '__main__':
             term = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_COUNT, 30, 0.1)
             cv2.cornerSubPix(img, corners, (5, 5), (-1, -1), term)
 
-        if debug_dir:
+        if out:
             vis = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
             cv2.drawChessboardCorners(vis, pattern_size, corners, found)
             path, name, ext = splitfn(fn)
-            outfile = os.path.join(debug_dir, name + '_chess.png')
+            outfile = os.path.join(out, name + '_chess.png')
             cv2.imwrite(outfile, vis)
             if found:
                 img_names_undistort.append(outfile)
@@ -103,11 +122,11 @@ if __name__ == '__main__':
     print("distortion coefficients: ", dist_coefs.ravel())
 
     # write to matrix to be used as input
-    with open(os.path.join(debug_dir, "matrix.txt"), "w") as matf:
+    with open(os.path.join(out, "matrix.txt"), "w") as matf:
         camera_matrix.reshape((3, 3))
         np.savetxt(matf, (camera_matrix[0], camera_matrix[1], camera_matrix[2]), fmt='%-12.8f')
 
-    with open(os.path.join(debug_dir, "distortion.txt"), "w") as distf:
+    with open(os.path.join(out, "distortion.txt"), "w") as distf:
         np.savetxt(distf, dist_coefs.ravel(), fmt='%.12f')
 
     # undistort the image with the calibration
@@ -122,7 +141,8 @@ if __name__ == '__main__':
         # crop and save the image
         x, y, w, h = roi
         dst = dst[y:y+h, x:x+w]
-        outfile = os.path.join(img_found, '_undistorted.png')
+        path, name, ext = splitfn(img_found)
+        outfile = os.path.join(path, name + '_undistorted.png')
         cv2.imwrite(outfile, dst)
         print('Undistorted image written to: %s' % outfile)
 
