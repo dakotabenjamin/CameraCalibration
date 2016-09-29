@@ -7,7 +7,7 @@ This suite of scripts will find camera matrix and distortion parameters with a s
 You need to install numpy and opencv:
 ```
 pip install numpy
-sudo apt-get install python-opencv
+sudo apt-get install python-opencv exiftool
 ```
 
 ## Usage: Calibrate chessboard
@@ -27,10 +27,10 @@ The first argument is the path to the chessboard. You will also have to input th
 With the photos and the produced matrix.txt and distortion.txt, run the following:
 
 ```
-python undistort.py --matrix matrix.txt --distortion distortion.txt "/path/*.jpg"
+python undistort.py --matrix matrix.txt --distortion distortion.txt "/path/to/images/"
 ```
 
-**Note**: Do not forget the quotes in "/path/*.jpg"
+**Note**: Do not forget the quotes in "/path/to/images"
 
 ### Docker Usage for undistorting images
 
