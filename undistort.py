@@ -17,53 +17,65 @@ import glob
 import os
 import logging
 import sys
-import getopt
+import argparse
 from subprocess import call
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 
 if __name__ == '__main__':
-    args, img_path = getopt.getopt(sys.argv[1:], '', ['matrix=', 'distortion='])
-    args = dict(args)
-    args.setdefault('--matrix', os.path.abspath('./sample/output/matrix.txt'))
-    args.setdefault('--distortion', os.path.abspath('./sample/output/distortion.txt'))
-    if not img_path:
-    #    img_path = os.path.abspath('./sample/img/*.JPG')  # default
-        img_path = os.path.abspath('./sample/img/*.JPG')  # default
-    #else:
-    #    img_path = img_path[0]
-    img_path = glob.glob(os.path.abspath(img_path[0]))
-    images_path = os.path.split(img_path[0])[0]
-    logging.debug(images_path)
 
-    matrix_path = args.get('--matrix')
-    distortion_path = args.get('--distortion')
+    parser = argparse.ArgumentParser(
+             description='Remove distortion from photos with previously '
+                         'generated parameters')
+    parser.add_argument('images', help='path to images')
+    parser.add_argument('-m', '--matrix', required=True, 
+                        help='path to the matrix.txt file')
+    parser.add_argument('-d', '--distortion', required=True,
+                        help='path to distortion matrix')
+    args = parser.parse_args()
+
+    # get image path
+    if os.path.isdir(args.images):
+        images_path = args.images
+    else:
+        logging.error('images path is not valid')
+        exit()
+    # get images in list
+    extensions = ['jpg', 'JPG', 'png']
+
+    images = [fn for fn in os.listdir(images_path)
+              if any(fn.endswith(ext) for ext in extensions)]
+
     out_path = os.path.join(images_path, 'out')
 
     # load parameters to np arrays
-    K = np.loadtxt(matrix_path)
-    d = np.loadtxt(distortion_path)
+    if os.path.isfile(args.matrix):
+        mpath = os.path.abspath(args.matrix)
+        K = np.loadtxt(mpath)
+    else:
+        logging.error('matrix path is not valid')
+        exit()
+    if os.path.isfile(args.distortion):
+        dpath = os.path.abspath(args.distortion)
+        d = np.loadtxt(dpath)
     # d[2:] = 0  # We only need first two values
 
-    print("Matrix: \n" + str(K))
-    print("Distortion: " + str(d))
-
-    # copy parameters to arrays
-    # K = np.array([[1743.23312, 0, 2071.06177], [0, 1741.57626, 1476.48298], [0, 0, 1]])
-    # d = np.array([-0.307412748, 0.300929683, 0, 0, 0])  # just use first two terms (no translation)
+    logging.info("Matrix: \n" + str(K))
+    logging.info("Distortion: " + str(d))
 
     if not os.path.isdir(out_path):
         os.mkdir(out_path)
 
     logging.debug("Starting loop")
     logging.debug("writing images to {0})".format(out_path))
-    for image in img_path:
+    for image in images:
         # logging.debug("var %s", image)
-        imgname = os.path.split(image)[1] 
-        logging.debug("Undistorting %s . . . ", imgname)
+        # imgname = os.path.split(image)[1] 
+        logging.debug("Undistorting %s . . . ", image)
         # read one of your images
-        img = cv2.imread(image)
+        path = os.path.join(images_path, image)
+        img = cv2.imread(path)
         h, w = img.shape[:2]
 
         # un-distort
@@ -72,12 +84,13 @@ if __name__ == '__main__':
 
         # TODO Write exif: camera maker, camera model, focal length?, GPS to new file
         # cv2.imwrite("original.jpg", img)
-        newimg_path = os.path.join(out_path, imgname)
+        newimg_path = os.path.join(out_path, image)
         cv2.imwrite(newimg_path, newimg)
 
         # Only works on linux
-        command = "exiftool -TagsFromFile {0} -all:all {1}".format(image, newimg_path).split(' ')
+        command = "exiftool -TagsFromFile {0} -all:all {1}".format(os.path.abspath(path), os.path.abspath(newimg_path)).split(' ')
         try:
+            logging.debug(command)
             call(command)
         except Exception as err:
             logging.error("Failed to write to exif: {0}".format(err))
