@@ -27,8 +27,10 @@ The first argument is the path to the chessboard. You will also have to input th
 With the photos and the produced matrix.txt and distortion.txt, run the following:
 
 ```
-python undistort.py --matrix matrix.txt --distortion distortion.txt /path/*.jpg
+python undistort.py --matrix matrix.txt --distortion distortion.txt "/path/*.jpg"
 ```
+
+**Note**: Do not forget the quotes in "/path/*.jpg"
 
 ### Docker Usage for undistorting images
 
