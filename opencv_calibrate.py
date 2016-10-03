@@ -72,7 +72,7 @@ if __name__ == '__main__':
 
     square_size = float(args.square_size)
 
-    pattern_size = (args.pattern_x, args.pattern_y)
+    pattern_size = (args.pattern_x -1, args.pattern_y - 1) # For some reason you have to subtract 1
     pattern_points = np.zeros((np.prod(pattern_size), 3), np.float32)
     pattern_points[:, :2] = np.indices(pattern_size).T.reshape(-1, 2)
     pattern_points *= square_size
