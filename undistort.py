@@ -88,7 +88,7 @@ if __name__ == '__main__':
         cv2.imwrite(newimg_path, newimg)
 
         # Only works on linux
-        command = "exiftool -TagsFromFile {0} -all:all {1}".format(os.path.abspath(path), os.path.abspath(newimg_path)).split(' ')
+        command = "exiftool -TagsFromFile {0} -all:all {1} -overwrite_original ".format(os.path.abspath(path), os.path.abspath(newimg_path)).split(' ')
         try:
             logging.debug(command)
             call(command)
