@@ -12,7 +12,7 @@ sudo apt-get install python-opencv exiftool
 
 ## Usage: Calibrate chessboard
 
-First you will need to take some photos of a black and white chessboard, [like this one](http://www.mrpt.org/downloads/camera-calibration-checker-board_9x7.pdf).
+First you will need to take some photos of a black and white chessboard with a white border, [like this one](http://www.mrpt.org/downloads/camera-calibration-checker-board_9x7.pdf).
 
 Then you will run the `opencv_calibrate.py` script to generate the matrix and distortion files. 
 ```
