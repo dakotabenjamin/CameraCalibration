@@ -16,7 +16,7 @@ First you will need to take some photos of a black and white chessboard, [like t
 
 Then you will run the `opencv_calibrate.py` script to generate the matrix and distortion files. 
 ```
-python opencv_calibrate.py ./sample/chessboard/ 9 6
+python opencv_calibrate.py ./sample/chessboard/ 10 7
 ```
 The first argument is the path to the chessboard. You will also have to input the chessboard dimensions (the number of squares in x and y) Optional arguments:
 ```
