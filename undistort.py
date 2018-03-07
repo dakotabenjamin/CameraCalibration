@@ -69,6 +69,22 @@ if __name__ == '__main__':
 
     logging.debug("Starting loop")
     logging.debug("writing images to {0})".format(out_path))
+
+    # Check if images are all the same w/h
+    img = cv2.imread(os.path.join(images_path, images[0]))
+    h, w = img.shape[:2]
+    useRectMap = True
+    for image in images:
+        path = os.path.join(images_path, image)
+        img = cv2.imread(path)
+        h1, w1 = img.shape[:2]
+        if not (h == h1 and w == w1):
+            useRectMap = False
+
+    if useRectMap:
+        newcamera, roi = cv2.getOptimalNewCameraMatrix(K, d, (w, h), 0)
+        mapx, mapy = cv2.initUndistortRectifyMap(K, d, None, newcamera, (w, h), 5)
+
     for image in images:
         # logging.debug("var %s", image)
         # imgname = os.path.split(image)[1] 
@@ -79,8 +95,11 @@ if __name__ == '__main__':
         h, w = img.shape[:2]
 
         # un-distort
-        newcamera, roi = cv2.getOptimalNewCameraMatrix(K, d, (w, h), 0)
-        newimg = cv2.undistort(img, K, d, None, newcamera)
+        if useRectMap:
+            newimg = cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
+        else:
+            newcamera, roi = cv2.getOptimalNewCameraMatrix(K, d, (w, h), 0)
+            newimg = cv2.undistort(img, K, d, None, newcamera)
 
         # TODO Write exif: camera maker, camera model, focal length?, GPS to new file
         # cv2.imwrite("original.jpg", img)
